@@ -17,7 +17,6 @@
 
 from time import time
 import os
-import glob
 
 from gettext import gettext as _
 
@@ -35,6 +34,16 @@ from TurtleArt.tatype import (TYPE_BOOL, TYPE_BOX, TYPE_CHAR, TYPE_INT,
                               TYPE_FLOAT, TYPE_OBJECT, TYPE_STRING,
                               TYPE_NUMBER)
 from TurtleArt.taturtle import Turtle
+
+
+def get_endswith_files(path, end):
+    f = os.listdir(path)
+    files = []
+    for name in f:
+        if (name.endswith(end)):
+            files.append(os.path.join(path, f))
+
+    return files
 
 
 class Turtle_blocks_extras(Plugin):
@@ -1166,7 +1175,7 @@ Journal objects'))
 
         if hasattr(self.tw, 'macros_path') and \
                 os.path.exists(self.tw.macros_path):
-            files = glob.glob(os.path.join(self.tw.macros_path, '*.tb'))
+            files = get_endswith_files(self.tw.macros_path ".tb");
             if len(files) > 0:
                 palette = make_palette(
                     'myblocks',
