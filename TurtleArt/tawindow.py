@@ -566,7 +566,7 @@ class TurtleArtWindow():
         self.window.add_events(Gdk.EventMask.BUTTON_RELEASE_MASK)
         self.window.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
         self.window.add_events(Gdk.EventMask.KEY_PRESS_MASK)
-        self.window.connect('draw', self._expose_cb)
+        self.window.connect('draw', self._draw_cb)
         self.window.connect('button-press-event', self._buttonpress_cb)
         self.window.connect('button-release-event', self._buttonrelease_cb)
         self.window.connect('motion-notify-event', self._move_cb)
@@ -754,12 +754,12 @@ class TurtleArtWindow():
         if self.running_sugar:
             self.activity.check_buttons_for_fit()
 
-    def _expose_cb(self, win, context):
+    def _draw_cb(self, win, context):
         ''' Repaint '''
-        self.do_expose_event(context)
+        self.do_draw(context)
         return True
 
-    def do_expose_event(self, cr):
+    def do_draw(self, cr):
         ''' Handle the expose-event by drawing '''
         # TODO: set global scale
         # find_sprite needs rescaled coordinates
