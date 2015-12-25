@@ -338,7 +338,7 @@ class TurtleArtActivity(activity.Activity):
         ''' Load Python code from the Journal. '''
         self.load_python.set_icon_name('pippy-openon')
         self.tw.load_python_code_from_file(fname=None, add_new_block=True)
-        GObject.timeout_add(250, self.load_python.set_icon, 'pippy-openoff')
+        GObject.timeout_add(250, self.load_python.set_icon_name, 'pippy-openoff')
 
     def do_save_as_odp_cb(self, button):
         _logger.debug('saving odp to journal')
@@ -483,7 +483,7 @@ class TurtleArtActivity(activity.Activity):
         self.eraser_button.set_icon_name('eraseroff')
         self.recenter()
         self.tw.eraser_button()
-        GObject.timeout_add(250, self.eraser_button.set_icon, 'eraseron')
+        GObject.timeout_add(250, self.eraser_button.set_icon_name, 'eraseron')
 
     def do_run_cb(self, button):
         ''' Callback for run button (rabbit) '''
