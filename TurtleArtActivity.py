@@ -1738,13 +1738,12 @@ class TurtleArtActivity(activity.Activity):
             store.append([pixbuf, filepath])
 
     def _scan_for_samples(self):
-        samples = sorted(
-            glob.glob(
-                os.path.join(
-                    activity.get_bundle_path(),
-                    'samples',
-                    'thumbnails',
-                    '*.png')))
+        samples = []
+        path = os.path.join(activity.get_bundle_path(), "samples", "thumbnails")
+        for name in os.listdir(path):
+            if name.endswith(".png"):
+                samples.append(os.path.join(path, name))
+
         return samples
 
     def is_toolbar_expanded(self):
