@@ -567,18 +567,20 @@ class TurtleArtWindow():
         self.window.add_events(Gdk.EventMask.BUTTON_MOTION_MASK)
         self.window.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
         self.window.add_events(Gdk.EventMask.KEY_PRESS_MASK)
+        self.window.drag_dest_set(Gtk.DestDefaults.ALL, [],
+                                  Gdk.DragAction.COPY)
+        self.window.drag_dest_set_target_list(None)
+        self.window.drag_dest_add_text_targets()
+
         self.window.connect('draw', self._draw_cb)
         self.window.connect('button-press-event', self._buttonpress_cb)
         self.window.connect('button-release-event', self._buttonrelease_cb)
         self.window.connect('motion-notify-event', self._move_cb)
         self.window.connect('key-press-event', self._keypress_cb)
+        self.window.connect('drag_data_received', self._drag_data_received)
+        self.window.connect('event', lambda w, e: self.window.queue_draw())
         Gdk.Screen.get_default().connect('size-changed',
                                          self._configure_cb)
-        self.window.drag_dest_set(Gtk.DestDefaults.ALL, [],
-                                  Gdk.DragAction.COPY)
-        self.window.drag_dest_set_target_list(None)
-        self.window.drag_dest_add_text_targets()
-        self.window.connect('drag_data_received', self._drag_data_received)
 
     def _show_unfullscreen_button(self):
         if self.activity._is_fullscreen and \
