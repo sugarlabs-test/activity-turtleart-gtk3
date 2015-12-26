@@ -1031,23 +1031,25 @@ class TurtleArtWindow():
 
         # Resize text_entry widget
         if hasattr(self, '_text_entry') and len(blocks) > 0:
-            font_desc = pango.FontDescription('Sans')
+            font_desc = Pango.FontDescription('Sans')
             font_desc.set_size(
-                int(blocks[0].font_size[0] * pango.SCALE * self.entry_scale))
+                int(blocks[0].font_size[0] * Pango.SCALE * self.entry_scale))
             self._text_entry.modify_font(font_desc)
 
     def _has_selectors(self):
-        return not (self.running_sugar)
+        #return not (self.running_sugar and self.activity.has_toolbarbox)  # Always has toolbarbox
+        return False
 
     def show_toolbar_palette(self, n, init_only=False, regenerate=False,
                              show=True):
         ''' Show the toolbar palettes, creating them on init_only '''
         # If we are running the 0.86+ toolbar, the selectors are already
         # created, as toolbar buttons. Otherwise, we need to create them.
-        if (not self.running_sugar) and \
-           self.selectors == []:
+        # Always has toolbar
+        #if (not self.running_sugar or not self.activity.has_toolbarbox) and \
+        #   self.selectors == []:
             # First, create the selector buttons
-            self._create_the_selectors()
+            #self._create_the_selectors()
 
         # Create the empty palettes that we'll then populate with prototypes.
         if self.palette_views == []:
@@ -2751,9 +2753,9 @@ class TurtleArtWindow():
                 self._text_entry = Gtk.TextView()
                 self._text_entry.set_justification(Gtk.Justification.CENTER)
                 self._text_buffer = self._text_entry.get_buffer()
-                font_desc = pango.FontDescription('Sans')
+                font_desc = Pango.FontDescription('Sans')
                 font_desc.set_size(
-                    int(blk.font_size[0] * pango.SCALE * self.entry_scale))
+                    int(blk.font_size[0] * Pango.SCALE * self.entry_scale))
                 self._text_entry.modify_font(font_desc)
                 self.activity.fixed.put(self._text_entry, 0, 0)
             self._text_entry.show()
