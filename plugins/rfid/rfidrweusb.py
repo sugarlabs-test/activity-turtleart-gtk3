@@ -2,9 +2,10 @@ from device import RFIDDevice
 from serial import Serial
 import dbus
 from dbus.mainloop.glib import DBusGMainLoop
-import gobject
 from time import sleep
 import utils
+
+from gi.repository import GObject
 
 HAL_SERVICE = 'org.freedesktop.Hal'
 HAL_MGR_PATH = '/org/freedesktop/Hal/Manager'
@@ -82,7 +83,7 @@ class RFIDReader(RFIDDevice):
                 self._connected = True
                 if self._select_animal_tag:
                     #gobject.idle_add(self._loop)
-                    gobject.timeout_add(1000, self._loop)
+                    GObject.timeout_add(1000, self._loop)
                     retval = True
             except:
                 self._connected = False
@@ -196,5 +197,5 @@ class RFIDReader(RFIDDevice):
 #    else:
 #        print "Not connected"
 #
-#    mloop = gobject.MainLoop()
+#    mloop = GObject.MainLoop()
 #    mloop.run()

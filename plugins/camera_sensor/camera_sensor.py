@@ -15,8 +15,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import gst
-import gtk
 from fcntl import ioctl
 import os
 from time import time
@@ -36,7 +34,6 @@ from TurtleArt.taconstants import MEDIA_SHAPES, NO_IMPORT, SKIN_PATHS, \
     BLOCKS_WITH_SKIN
 from TurtleArt.taprimitive import (ConstantArg, Primitive)
 from TurtleArt.tatype import TYPE_NUMBER
-
 
 class Camera_sensor(Plugin):
 

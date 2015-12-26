@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 
 import cairo
-import pygtk
-pygtk.require('2.0')
-import gtk
-import gobject
-
 from gettext import gettext as _
 
 import os
@@ -16,6 +11,8 @@ from TurtleArt.taconstants import CONSTANTS
 from TurtleArt.tatype import *
 from TurtleArt.tawindow import TurtleArtWindow
 
+from gi.repository import Gtk
+from gi.repository import Gdk
 
 # search sys.path for a dir containing TurtleArt/tawindow.py
 # path to the toplevel directory of the TA installation
@@ -58,14 +55,14 @@ class DummyTurtleMain(object):
         self.set_title = self.win.set_title
 
         # setup a scrolled container for the canvas
-        self.vbox = gtk.VBox(False, 0)
+        self.vbox = Gtk.VBox(False, 0)
         self.vbox.show()
-        self.sw = gtk.ScrolledWindow()
-        self.sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.sw = Gtk.ScrolledWindow()
+        self.sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.sw.show()
-        self.canvas = gtk.DrawingArea()
-        width = gtk.gdk.screen_width() * 2
-        height = gtk.gdk.screen_height() * 2
+        self.canvas = Gtk.DrawingArea()
+        width = Gdk.Screen.width() * 2
+        height = Gdk.Screen.height() * 2
         self.canvas.set_size_request(width, height)
         self.sw.add_with_viewport(self.canvas)
         self.canvas.show()
@@ -87,8 +84,8 @@ class DummyTurtleMain(object):
             cr = cairo.Context(img_surface)
             surface = cr.get_target()
         self.turtle_canvas = surface.create_similar(
-            cairo.CONTENT_COLOR, max(1024, gtk.gdk.screen_width() * 2),
-            max(768, gtk.gdk.screen_height() * 2))
+            cairo.CONTENT_COLOR, max(1024, Gdk.Screen.width() * 2),
+            max(768, Gdk.Screen.height() * 2))
 
         # instantiate an instance of a dummy sub-class that supports only
         # the stuff TurtleGraphics needs
@@ -107,7 +104,7 @@ class DummyTurtleMain(object):
         for plugin in self.tw.turtleart_plugins:
             if hasattr(plugin, 'quit'):
                 plugin.quit()
-        gtk.main_quit()
+        Gdk.main_quit()
         exit()
 
 
@@ -117,7 +114,7 @@ def get_tw():
     """
     # copied from turtleblocks.TurtleMain._setup_gtk()
 
-    win = gtk.Window(gtk.WINDOW_TOPLEVEL)
+    win = Gtk.Window()
     gui = DummyTurtleMain(win=win, name=sys.argv[0])
     # TODO re-enable this code (after giving gui the right attributes)
     # win.set_default_size(gui.width, gui.height)

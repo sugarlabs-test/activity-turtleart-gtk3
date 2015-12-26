@@ -1,6 +1,6 @@
-import gobject
+from gi.repository import GObject
 
-class RFIDDevice(gobject.GObject):
+class RFIDDevice(GObject.GObject):
     """
     Ancestor class for every supported device.
     The main class for the device driver must be called "RFIDReader".
@@ -10,10 +10,10 @@ class RFIDDevice(gobject.GObject):
     # signal "disconnected" has to be emitted when the device is
     # unplugged or an error has been detected.
     __gsignals__ = {
-        'tag-read': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE,
-                     (gobject.TYPE_STRING,)),
-        'disconnected': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE,
-                         (gobject.TYPE_STRING,))
+        'tag-read': (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE,
+                     (GObject.TYPE_STRING,)),
+        'disconnected': (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE,
+                         (GObject.TYPE_STRING,))
     }
     def __init__(self):
         """

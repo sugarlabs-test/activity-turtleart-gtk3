@@ -37,6 +37,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 from gi.repository import GObject
 
 try:
@@ -369,8 +370,8 @@ return %s(self)" % (p, P, P)
     def _fixed_resize_cb(self, widget=None, rect=None):
         ''' If a toolbar opens or closes, we need to resize the vbox
         holding out scrolling window. '''
-        self.vbox.set_size_request(rect[2], rect[3])
-        self.menu_height = self.menu_bar.size_request()[1]
+        self.vbox.set_size_request(rect.width, rect.height)
+        self.menu_height = self.menu_bar.get_size_request()[1]
 
     def restore_cursor(self):
         ''' No longer copying or sharing, so restore standard cursor. '''
@@ -404,16 +405,16 @@ return %s(self)" % (p, P, P)
         self.fixed = Gtk.Fixed()
         self.fixed.connect('size-allocate', self._fixed_resize_cb)
         width = Gdk.Screen.width() - 80
-        height = Gdk.screen.height() - 80
+        height = Gdk.Screen.height() - 80
         self.fixed.set_size_request(width, height)
 
         self.vbox = Gtk.VBox(False, 0)
         self.vbox.show()
 
         self.menu_bar = self._get_menu_bar()
-        self.vbox.pack_start(self.menu_bar, False, False)
+        self.vbox.pack_start(self.menu_bar, False, False, 0)
         self.menu_bar.show()
-        self.menu_height = self.menu_bar.size_request()[1]
+        self.menu_height = self.menu_bar.get_size_request()[1]
 
         self.sw = Gtk.ScrolledWindow()
         self.sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
@@ -424,7 +425,7 @@ return %s(self)" % (p, P, P)
         canvas.set_size_request(width, height)
         self.sw.add_with_viewport(canvas)
         canvas.show()
-        self.vbox.pack_end(self.sw, True, True)
+        self.vbox.pack_end(self.sw, True, True, 0)
         self.fixed.put(self.vbox, 0, 0)
         self.fixed.show()
 
@@ -996,7 +997,7 @@ Would you like to save before quitting?'))
             self._sample_window.set_policy(Gtk.PolicyType.NEVER,
                                            Gtk.PolicyType.AUTOMATIC)
             width = Gdk.Screen.width() / 2
-            height = Gdk.screen.height() / 2
+            height = Gdk.Screen.height() / 2
             self._sample_window.set_size_request(width, height)
             self._sample_window.show()
 

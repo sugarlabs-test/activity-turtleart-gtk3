@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import gobject
 import dbus
 import dbus.mainloop
 import dbus.mainloop.glib
