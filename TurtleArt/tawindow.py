@@ -564,6 +564,7 @@ class TurtleArtWindow():
         ''' Register the events we listen to. '''
         self.window.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         self.window.add_events(Gdk.EventMask.BUTTON_RELEASE_MASK)
+        self.window.add_events(Gdk.EventMask.BUTTON_MOTION_MASK)
         self.window.add_events(Gdk.EventMask.POINTER_MOTION_MASK)
         self.window.add_events(Gdk.EventMask.KEY_PRESS_MASK)
         self.window.connect('draw', self._draw_cb)
@@ -573,11 +574,11 @@ class TurtleArtWindow():
         self.window.connect('key-press-event', self._keypress_cb)
         Gdk.Screen.get_default().connect('size-changed',
                                          self._configure_cb)
-
-        ##target = [Gtk.TargetEntry('text/plain', 0, 0)]
-        ##self.window.drag_dest_set(Gtk.DestDefaults.ALL, target,
-        ##                          Gdk.DragAction.COPY | Gdk.DragAction.MOVE)
-        ##self.window.connect('drag_data_received', self._drag_data_received)
+        self.window.drag_dest_set(Gtk.DestDefaults.ALL, [],
+                                  Gdk.DragAction.COPY)
+        self.window.drag_dest_set_target_list(None)
+        self.window.drag_dest_add_text_targets()
+        self.window.connect('drag_data_received', self._drag_data_received)
 
     def _show_unfullscreen_button(self):
         if self.activity._is_fullscreen and \
@@ -768,7 +769,6 @@ class TurtleArtWindow():
 
         cr.rectangle(self.rect.x, self.rect.y,
                      self.rect.width, self.rect.height)
-        cr.clip()
 
         if self.turtle_canvas is not None:
             cr.set_source_surface(self.turtle_canvas)
