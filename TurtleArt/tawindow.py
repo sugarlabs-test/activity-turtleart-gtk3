@@ -39,6 +39,8 @@ from gi.repository import GObject
 from gi.repository import GdkPixbuf
 from gi.repository import PangoCairo
 
+from sugar3.activity import activity
+
 _GST_AVAILABLE = False
 
 from random import uniform
@@ -116,7 +118,7 @@ from tautils import (magnitude, get_load_name, get_save_name, data_from_file,
                       error_output, find_hat, find_bot_block,
                       restore_clamp, collapse_clamp, data_from_string,
                       increment_name, get_screen_dpi, is_writeable)
-from tasprite_factory import (svg_str_to_pixbuf, svg_from_file)
+from tasprite_factory import (SVG, svg_str_to_pixbuf, svg_from_file)
 from tapalette import block_primitives
 from tapaletteview import PaletteView
 from taselector import (Selector, create_toolbar_background)
@@ -303,6 +305,7 @@ class TurtleArtWindow():
         self.turtle_movement_to_share = None
         # Don't paste on top of where you copied.
         self.paste_offset = PASTE_OFFSET
+        self._icon_paths = []
 
         # common properties of all blocks (font size, decimal point, ...)
         self.block_list = Blocks(font_scale_factor=self.scale,
@@ -1036,20 +1039,16 @@ class TurtleArtWindow():
                 int(blocks[0].font_size[0] * Pango.SCALE * self.entry_scale))
             self._text_entry.modify_font(font_desc)
 
-    def _has_selectors(self):
-        #return not (self.running_sugar and self.activity.has_toolbarbox)  # Always has toolbarbox
-        return False
-
     def show_toolbar_palette(self, n, init_only=False, regenerate=False,
                              show=True):
         ''' Show the toolbar palettes, creating them on init_only '''
         # If we are running the 0.86+ toolbar, the selectors are already
         # created, as toolbar buttons. Otherwise, we need to create them.
         # Always has toolbar
-        #if (not self.running_sugar or not self.activity.has_toolbarbox) and \
-        #   self.selectors == []:
+
+        if self.selectors == []:
             # First, create the selector buttons
-            #self._create_the_selectors()
+            self._create_the_selectors()
 
         # Create the empty palettes that we'll then populate with prototypes.
         if self.palette_views == []:
@@ -1070,7 +1069,7 @@ class TurtleArtWindow():
         self.previous_palette = self.selected_palette
 
         # Make sure all of the selectors are visible.
-        if show and self._has_selectors():
+        if show and self.activity is not None and len(self.selectors) < n:
             self.selected_selector = n
             self.selectors[n].set_shape(1)
             for i in range(len(palette_blocks)):
@@ -1092,7 +1091,7 @@ class TurtleArtWindow():
 
     def regenerate_palette(self, n):
         ''' Regenerate palette (used by some plugins) '''
-        if self._has_selectors() and self.selectors == []:
+        if self.activity is None and self.selectors == []:
             return
         if self.palette_views == []:
             return
@@ -1113,13 +1112,49 @@ class TurtleArtWindow():
     def _create_the_selectors(self):
         ''' Create the palette selector buttons: only when running
         old-style Sugar toolbars or from GNOME '''
-        for i in range(len(palette_names)):
-            self.selectors.append(Selector(self, i))
+        svg = SVG()
+        x, y = 50, 0  # positioned at the left, top
+        if self._icon_paths == []:
+            self._icon_paths.append(os.path.join(activity.get_bundle_path(), 'icons'))
+
+        for i, name in enumerate(palette_names):
+            for path in self._icon_paths:
+                if os.path.exists(os.path.join(path, '%soff.svg' % (name))):
+                    icon_pathname = os.path.join(path, '%soff.svg' % (name))
+                    break
+            if icon_pathname is not None:
+                off_shape = svg_str_to_pixbuf(svg_from_file(icon_pathname))
+            else:
+                off_shape = svg_str_to_pixbuf(svg_from_file(os.path.join(
+                            self._icon_paths[0], 'extrasoff.svg')))
+                error_output('Unable to open %soff.svg' % (name),
+                             self.running_sugar)
+            for path in self._icon_paths:
+                if os.path.exists(os.path.join(path, '%son.svg' % (name))):
+                    icon_pathname = os.path.join(path, '%son.svg' % (name))
+                    break
+            if icon_pathname is not None:
+                on_shape = svg_str_to_pixbuf(svg_from_file(icon_pathname))
+            else:
+                on_shape = svg_str_to_pixbuf(svg_from_file(os.path.join(
+                            self._icon_paths[0], 'extrason.svg')))
+                error_output('Unable to open %son.svg' % (name),
+                             self.running_sugar)
+
+            selector = Sprite(self.sprite_list, x, y, off_shape)
+            selector.type = 'selector'
+            selector.name = name
+            selector.set_layer(TAB_LAYER)
+            self.selectors.append(selector)
+
+            x += int(selector.get_dimensions()[0])  # running from left to right
 
         # Create the toolbar background for the selectors
         self.toolbar_offset = ICON_SIZE
-        self.toolbar_spr = create_toolbar_background(self.sprite_list,
-                                                     self.width)
+        self.toolbar_spr = Sprite(self.sprite_list, 0, 0,
+            svg_str_to_pixbuf(svg.toolbar(2 * self.width, ICON_SIZE)))
+        self.toolbar_spr.type = 'toolbar'
+        self.toolbar_spr.set_layer(CATEGORY_LAYER)
 
     def _create_the_empty_palettes(self):
         ''' Create the empty palettes to be populated by prototype blocks. '''
@@ -1216,7 +1251,7 @@ class TurtleArtWindow():
         # Hide previously selected palette
         if palette is not None:
             self.palette_views[palette].hide()
-            if self._has_selectors():
+            if self.activity is not None and len(self.selectors) < palette:
                 self.selectors[palette].set_shape(0)
 
     def _buttonpress_cb(self, win, event):
