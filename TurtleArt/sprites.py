@@ -270,6 +270,7 @@ class Sprite:
     def set_layer(self, layer=None):
         ''' Set the layer for a sprite '''
         self._sprites.remove_from_list(self)
+        print("SET LAYER", layer)
         if layer is not None:
             self.layer = layer
         for i in range(self._sprites.length_of_list()):

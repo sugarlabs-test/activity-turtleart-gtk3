@@ -137,8 +137,8 @@ class TurtleMain():
 
     def _get_gconf_settings(self):
         try:
-            import gconf
-            self.client = gconf.client_get_default()
+            from gi.repository import GConf
+            self.client = GConf.Client.get_default()
         except ImportError:
             pass
 
