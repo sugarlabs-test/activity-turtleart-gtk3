@@ -28,9 +28,9 @@ from math import pi
 from gettext import gettext as _
 
 from gi.repository import Gtk
-from gi.repository import GObject
 from gi.repository import Gdk
 from gi.repository import Pango
+from gi.repository import GObject
 from gi.repository import PangoCairo
 
 from sprites import Sprite
@@ -325,33 +325,35 @@ class TurtleGraphics:
     def draw_text(self, label, x, y, size, width, heading, scale):
         ''' Draw text '''
 
-        def _draw_text(cr, label, x, y, size, width, scale, heading, rgb,
+        def _draw_text(cc, label, x, y, size, width, scale, heading, rgb,
                        wrap=False):
             import textwrap
 
-            final_scale = int(size * scale) * pango.SCALE
+            final_scale = int(size * scale) * Pango.SCALE
             label = str(label)
             if wrap:
                 label = '\n'.join(textwrap.wrap(label, int(width / scale)))
 
-            cc = pangocairo.CairoContext(cr)
-            pl = cc.create_layout()
-            fd = pango.FontDescription(self._font)
+            pl = PangoCairo.create_layout(cc)
+            fd = Pango.FontDescription(self._font)
             fd.set_size(final_scale)
             pl.set_font_description(fd)
             if isinstance(label, (str, unicode)):
-                pl.set_text(label.replace('\0', ' '))
+                text = label.replace('\0', ' ')
             elif isinstance(label, (float, int)):
-                pl.set_text(str(label))
+                text = str(label)
             else:
-                pl.set_text(str(label))
-            pl.set_width(int(width) * pango.SCALE)
+                text = label
+
+            pl.set_text(str(label), len(str(label)))
+
+            pl.set_width(int(width) * Pango.SCALE)
             cc.save()
             cc.translate(x, y)
             cc.rotate(heading * DEGTOR)
-            cr.set_source_rgb(rgb[0] / 255., rgb[1] / 255., rgb[2] / 255.)
-            cc.update_layout(pl)
-            cc.show_layout(pl)
+            cc.set_source_rgb(rgb[0] / 255., rgb[1] / 255., rgb[2] / 255.)
+            PangoCairo.update_layout(cc, pl)
+            PangoCairo.show_layout(cc, pl)
             cc.restore()
 
         width *= scale
