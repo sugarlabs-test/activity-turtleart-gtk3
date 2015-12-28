@@ -1069,7 +1069,7 @@ class TurtleArtWindow():
         self.previous_palette = self.selected_palette
 
         # Make sure all of the selectors are visible.
-        if show and self.activity is not None and len(self.selectors) < n:
+        if show and len(self.selectors) > n:
             self.selected_selector = n
             self.selectors[n].set_shape(1)
             for i in range(len(palette_blocks)):
@@ -1251,8 +1251,9 @@ class TurtleArtWindow():
         # Hide previously selected palette
         if palette is not None:
             self.palette_views[palette].hide()
-            if self.activity is not None and len(self.selectors) < palette:
-                self.selectors[palette].set_shape(0)
+            if self.activity is not None and len(self.selectors) > palette:
+                #self.selectors[palette].set_shape(0)
+                pass
 
     def _buttonpress_cb(self, win, event):
         ''' Button press '''
