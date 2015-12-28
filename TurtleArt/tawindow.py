@@ -1071,7 +1071,7 @@ class TurtleArtWindow():
         # Make sure all of the selectors are visible.
         if show and len(self.selectors) > n:
             self.selected_selector = n
-            self.selectors[n].set_shape(1)
+            #self.selectors[n].set_shape(1)  # FIXME: Throw error
             for i in range(len(palette_blocks)):
                 self.selectors[i].set_layer()
 

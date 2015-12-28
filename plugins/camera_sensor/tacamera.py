@@ -20,10 +20,12 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-import time
-from TurtleArt.tautils import debug_output
+import gi
+gi.require_version("Gst", "1.0")
 
-#from gi.repository import Gst
+from gi.repository import Gst
+Gst.init()
+
 
 class Camera():
     ''' Sets up a pipe from the camera to a pixbuf and emits a signal
@@ -34,41 +36,39 @@ class Camera():
         self.pipe = None
         self.bus = None
 
-        #self.pipe = gst.Pipeline('pipeline')
-        #v4l2src = gst.element_factory_make('v4l2src', None)
-        #v4l2src.props.device = device
-        #self.pipe.add(v4l2src)
-        #ffmpegcolorspace = gst.element_factory_make('ffmpegcolorspace', None)
-        #self.pipe.add(ffmpegcolorspace)
-        #gdkpixbufsink = gst.element_factory_make('gdkpixbufsink', None)
-        #self.pipe.add(gdkpixbufsink)
-        #gst.element_link_many(v4l2src, ffmpegcolorspace, gdkpixbufsink)
-        #if self.pipe is not None:
-        #    self.bus = self.pipe.get_bus()
-        #    self.bus.add_signal_watch()
-        #    self.bus.connect('message', self._on_message)
-        #    status = True
-        #else:
-        #    status = False
+        self.pipe = Gst.Pipeline()
+        v4l2src = Gst.ElementFactory.make("v4l2src", None)
+        v4l2src.props.device = device
+        self.pipe.add(v4l2src)
+        videoconvert = Gst.ElementFactory.make('videoconvert', None)  # ffmpegcolorspace
+        self.pipe.add(videoconvert)
+        gdkpixbufsink = Gst.ElementFactory.make('gdkpixbufsink', None)
+        self.pipe.add(gdkpixbufsink)
+
+        v4l2src.link(videoconvert)
+        videoconvert.link(gdkpixbufsink)
+
+        if self.pipe is not None:
+            self.bus = self.pipe.get_bus()
+            self.bus.add_signal_watch()
+            self.bus.connect('message', self._on_message)
 
     def _on_message(self, bus, message):
         ''' We get a message if a pixbuf is available '''
-        #if message.structure is not None:
-        #    if message.structure.get_name() == 'pixbuf':
-        #        self.pixbuf = message.structure['pixbuf']
-        #        self.image_ready = True
-        pass
+        if message.get_structure() is not None:
+            if message.structure.get_name() == 'pixbuf':
+                self.pixbuf = message.structure['pixbuf']
+                self.image_ready = True
 
     def start_camera_input(self):
         ''' Start grabbing '''
         self.pixbuf = None
         self.image_ready = False
-        #self.pipe.set_state(gst.STATE_PLAYING)
-        #while not self.image_ready:
-        #    self.bus.poll(gst.MESSAGE_ANY, -1)
+        self.pipe.set_state(Gst.State.PLAYING)
+        while not self.image_ready:
+            self.bus.poll(Gst.MessageType.ANY, -1)
 
     def stop_camera_input(self):
         ''' Stop grabbing '''
-        #self.pipe.set_state(gst.STATE_NULL)
-        pass
+        self.pipe.set_state(Gst.State.NULL)
 
