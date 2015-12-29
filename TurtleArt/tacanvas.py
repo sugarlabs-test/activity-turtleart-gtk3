@@ -308,7 +308,7 @@ class TurtleGraphics:
             cc.translate(x + w / 2., y + h / 2.)
             cc.rotate(heading * DEGTOR)
             cc.translate(-x - w / 2., -y - h / 2.)
-            cc.set_source_pixbuf(pixbuf, x, y)
+            Gdk.cairo_set_source_pixbuf(cc, pixbuf, x, y)
             cc.rectangle(x, y, w, h)
             cc.fill()
             cc.restore()

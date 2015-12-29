@@ -326,8 +326,8 @@ class Turtle:
                     context.translate(nw / 2.0, nh / 2.0)
                     context.rotate(i * 10 * pi / 180.)
                     context.translate(-nw / 2.0, -nh / 2.0)
-                    context.set_source_pixbuf(shapes[0], (nw - w) / 2.0,
-                                              (nh - h) / 2.0)
+                    Gdk.cairo_set_source_pixbuf(context, shapes[0],
+                                                (nw - w) / 2.0, (nh - h) / 2.0)
                     context.rectangle(0, 0, nw, nh)
                     context.fill()
                     images.append(surface)
