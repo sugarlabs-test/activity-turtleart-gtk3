@@ -198,8 +198,8 @@ class Sprite:
 
         self.rect.x = int(x)
         self.rect.y = int(y)
-        self.rect.width = 0
-        self.rect.height = 0
+        self.rect.width = image.get_height()
+        self.rect.height = image.get_width()
 
     def set_image(self, image, i=0, dx=0, dy=0):
         ''' Add an image to the sprite. '''

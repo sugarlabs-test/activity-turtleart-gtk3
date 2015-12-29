@@ -1046,7 +1046,7 @@ class TurtleArtWindow():
         # created, as toolbar buttons. Otherwise, we need to create them.
         # Always has toolbar
 
-        if self.selectors == []:
+        if self.selectors == [] and self.activity is None:
             # First, create the selector buttons
             self._create_the_selectors()
 
