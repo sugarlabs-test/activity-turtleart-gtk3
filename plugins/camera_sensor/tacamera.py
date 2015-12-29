@@ -42,11 +42,11 @@ class Camera():
         self.pipe.add(v4l2src)
         videoconvert = Gst.ElementFactory.make('videoconvert', None)  # ffmpegcolorspace
         self.pipe.add(videoconvert)
-        gdkpixbufsink = Gst.ElementFactory.make('gdkpixbufsink', None)
-        self.pipe.add(gdkpixbufsink)
+        self.gdkpixbufsink = Gst.ElementFactory.make('gdkpixbufsink', None)
+        self.pipe.add(self.gdkpixbufsink)
 
         v4l2src.link(videoconvert)
-        videoconvert.link(gdkpixbufsink)
+        videoconvert.link(self.gdkpixbufsink)
 
         if self.pipe is not None:
             self.bus = self.pipe.get_bus()
@@ -58,7 +58,7 @@ class Camera():
         structure = message.get_structure()
         if structure is not None:
             if structure.get_name() == 'pixbuf':
-                self.pixbuf = message.structure['pixbuf']
+                self.pixbuf = self.gdkpixbufsink.get_property("last-pixbuf")
                 self.image_ready = True
 
     def start_camera_input(self):
@@ -67,7 +67,7 @@ class Camera():
         self.image_ready = False
         self.pipe.set_state(Gst.State.PLAYING)
         while not self.image_ready:
-            self.bus.poll(Gst.MessageType.ANY, -1)
+            self.bus.poll(Gst.MessageType.ANY, 1)
 
     def stop_camera_input(self):
         ''' Stop grabbing '''
