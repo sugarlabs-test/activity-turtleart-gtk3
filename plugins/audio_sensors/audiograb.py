@@ -25,7 +25,11 @@ from threading import Timer
 from TurtleArt.taconstants import XO1, XO4
 from TurtleArt.tautils import debug_output
 
-#from gi.repository import Gst
+import gi
+gi.require_version("Gst", "1.0")
+
+from gi.repository import Gst
+Gst.init()
 
 # Initial device settings
 RATE = 48000
@@ -105,34 +109,47 @@ class AudioGrab():
         self.pads = []
         self.queue = []
         self.fakesink = []
-        #self.pipeline = gst.Pipeline('pipeline')
-        #self.alsasrc = gst.element_factory_make('alsasrc', 'alsa-source')
-        #self.pipeline.add(self.alsasrc)
-        #self.caps1 = gst.element_factory_make('capsfilter', 'caps1')
-        #self.pipeline.add(self.caps1)
-        #caps_str = 'audio/x-raw-int,rate=%d,channels=%d,depth=16' % (
-        #    RATE, self.channels)
-        #self.caps1.set_property('caps', gst.caps_from_string(caps_str))
-        #if self.channels == 1:
-        #    self.fakesink.append(gst.element_factory_make('fakesink', 'fsink'))
-        #    self.pipeline.add(self.fakesink[0])
-        #    self.fakesink[0].connect('handoff', self.on_buffer, 0)
-        #    self.fakesink[0].set_property('signal-handoffs', True)
-        #    gst.element_link_many(self.alsasrc, self.caps1, self.fakesink[0])
-        #else:
-        #    if not hasattr(self, 'splitter'):
-        #        self.splitter = gst.element_factory_make('deinterleave')
-        #        self.pipeline.add(self.splitter)
-        #        self.splitter.set_properties('keep-positions=true', 'name=d')
-        #        self.splitter.connect('pad-added', self._splitter_pad_added)
-        #        gst.element_link_many(self.alsasrc, self.caps1, self.splitter)
-        #    for i in range(self.channels):
-        #        self.queue.append(gst.element_factory_make('queue'))
-        #        self.pipeline.add(self.queue[i])
-        #        self.fakesink.append(gst.element_factory_make('fakesink'))
-        #        self.pipeline.add(self.fakesink[i])
-        #        self.fakesink[i].connect('handoff', self.on_buffer, i)
-        #        self.fakesink[i].set_property('signal-handoffs', True)
+
+        self.pipeline = Gst.Pipeline()
+
+        self.pulsesrc = Gst.ElementFactory.make('pulsesrc', 'pulse-source')
+        self.pipeline.add(self.pulsesrc)
+
+        self.caps1 = Gst.ElementFactory.make('capsfilter', 'caps1')
+        self.pipeline.add(self.caps1)
+
+        caps_str = 'audio/x-raw,format=(int),rate=%d,channels=%d,depth=16' % (
+            RATE, self.channels)
+        self.caps1.set_property('caps', Gst.Caps.from_string(caps_str))
+        if self.channels == 1:
+            fs = Gst.ElementFactory.make('fakesink', 'fsink')
+            self.fakesink.append(fs)
+            self.pipeline.add(fs)
+            fs.connect('handoff', self.on_buffer, 0)
+            fs.set_property('signal-handoffs', True)
+
+            self.pulsesrc.link(self.caps1)
+            self.caps1.link(fs)
+        else:
+            if not hasattr(self, 'splitter'):
+                self.splitter = Gst.ElementFactory.make('deinterleave')
+                self.pipeline.add(self.splitter)
+                self.splitter.set_properties('keep-positions=true', 'name=d')
+                self.splitter.connect('pad-added', self._splitter_pad_added)
+
+                self.pulsesrc.link(self.caps1)
+                self.caps1.link(self.splitter)
+
+            for i in range(self.channels):
+                queue = Gst.ElementFactory.make("queue")
+                self.queue.append(queue)
+                self.pipeline.add(queue)
+
+                fs = Gst.ElementFactory.make("fakesink")
+                fs.connect('handoff', self.on_buffer, i)
+                fs.set_property('signal-handoffs', True)
+                self.fakesink.append(fs)
+                self.pipeline.add(fs)
 
         self.dont_queue_the_buffer = False
 
@@ -141,9 +158,10 @@ class AudioGrab():
         self.capture_interval_sample = False
 
     def _query_mixer(self):
-        #self._mixer = gst.element_factory_make('alsamixer')
-        #rc = self._mixer.set_state(gst.STATE_PAUSED)
-        #assert rc == gst.STATE_CHANGE_SUCCESS
+        #self._mixer = Gst.ElementFactory.make('alsamixer')
+        #rc = self._mixer.set_state(Gst.State.PAUSED)
+        #rc = self.pipeline.set_state(Gst.State.PAUSED)
+        #assert(rc == Gst.StateChangeReturn.SUCCESS)
 
         # Query the available controls
         #tracks_list = self._mixer.list_tracks()
@@ -170,12 +188,11 @@ class AudioGrab():
 
         # If there were existing pipelines, unlink them
         for i in range(self._pad_count):
-        #    try:
-        #        self.splitter.unlink(self.queue[i])
-        #        self.queue[i].unlink(self.fakesink[i])
-        #    except:
-        #        traceback.print_exc()
-            traceback.print_exc()
+            try:
+                self.splitter.unlink(self.queue[i])
+                self.queue[i].unlink(self.fakesink[i])
+            except:
+                traceback.print_exc()
 
         # Build the new pipelines
         self._pad_count = 0
@@ -189,21 +206,20 @@ class AudioGrab():
                      self.parent.running_sugar)
         '''
         self.pads.append(pad)
-        if self._pad_count < self.channels:
+        #if self._pad_count < self.channels:
         #    pad.link(self.queue[self._pad_count].get_pad('sink'))
         #    self.queue[self._pad_count].get_pad('src').link(
         #        self.fakesink[self._pad_count].get_pad('sink'))
-            self._pad_count += 1
-        else:
-            debug_output('ignoring channels > %d' % (self.channels),
-                         self.parent.running_sugar)
+        #    self._pad_count += 1
+        #else:
+        #    debug_output('ignoring channels > %d' % (self.channels),
+        #                 self.parent.running_sugar)
 
     def set_handoff_signal(self, handoff_state):
         '''Sets whether the handoff signal would generate an interrupt
         or not'''
         for i in range(len(self.fakesink)):
-        #    self.fakesink[i].set_property('signal-handoffs', handoff_state)
-            pass
+            self.fakesink[i].set_property('signal-handoffs', handoff_state)
 
     def _new_buffer(self, buf, channel):
         ''' Use a new buffer '''
@@ -222,21 +238,18 @@ class AudioGrab():
     def start_sound_device(self):
         '''Start or Restart grabbing data from the audio capture'''
         #gst.event_new_flush_start()
-        #self.pipeline.set_state(gst.STATE_PLAYING)
-        pass
+        self.pipeline.set_state(Gst.State.PLAYING)
 
     def stop_sound_device(self):
         '''Stop grabbing data from capture device'''
         #gst.event_new_flush_stop()
-        #self.pipeline.set_state(gst.STATE_NULL)
-        pass
+        self.pipeline.set_state(Gst.State.NULL)
 
     def sample_now(self):
         ''' Log the current sample now. This method is called from the
         capture_timer object when the interval expires. '''
         self.capture_interval_sample = True
         self.make_timer()
-        pass
 
     def set_buffer_interval_logging(self, interval=0):
         '''Sets the number of buffers after which a buffer needs to be
@@ -251,14 +264,12 @@ class AudioGrab():
         self.pause_grabbing()
         caps_str = 'audio/x-raw-int,rate=%d,channels=%d,depth=16' % (
             sr, self.channels)
-        #self.caps1.set_property('caps', gst.caps_from_string(caps_str))
+        self.caps1.set_property('caps', Gst.Caps.from_string(caps_str))
         self.resume_grabbing()
-        pass
 
     def get_sampling_rate(self):
         '''Gets the sampling rate of the capture device'''
-        #return int(self.caps1.get_property('caps')[0]['rate'])
-        return 0
+        return int(self.caps1.get_property('caps')[0]['rate'])
 
     def set_callable1(self, callable1):
         '''Sets the callable to the drawing function for giving the
@@ -269,26 +280,22 @@ class AudioGrab():
         '''Called right at the start of the Activity'''
         self.start_sound_device()
         self.set_handoff_signal(True)
-        pass
 
     def pause_grabbing(self):
         '''When Activity goes into background'''
         self.save_state()
         self.stop_sound_device()
-        pass
 
     def resume_grabbing(self):
         '''When Activity becomes active after going to background'''
         self.start_sound_device()
         self.resume_state()
         self.set_handoff_signal(True)
-        pass
 
     def stop_grabbing(self):
         '''Not used ???'''
         self.stop_sound_device()
         self.set_handoff_signal(False)
-        pass
 
     def _find_control(self, prefixes):
         '''Try to find a mixer control matching one of the prefixes.
@@ -314,43 +321,41 @@ class AudioGrab():
         #        controls.append((track, diff))
 
         controls.sort(key=lambda e: e[1])
-        #if controls:
-        #    '''
-        #    debug_output('Found control: %s' %\
-        #                  (str(controls[0][0].props.untranslated_label)),
-        #                 self.parent.running_sugar)
-        #    '''
-        #    if self.channels is None:
-        #        if hasattr(controls[0][0], 'num_channels'):
-        #            channels = controls[0][0].num_channels
-        #            if channels > 0:
-        #                self.channels = channels
-        #                '''
-        #                debug_output('setting channels to %d' % (self.channels),
-        #                             self.parent.running_sugar)
-        #                '''
+        if controls:
+            '''
+            debug_output('Found control: %s' %\
+                          (str(controls[0][0].props.untranslated_label)),
+                         self.parent.running_sugar)
+            '''
+            if self.channels is None:
+                if hasattr(controls[0][0], 'num_channels'):
+                    channels = controls[0][0].num_channels
+                    if channels > 0:
+                        self.channels = channels
+                        '''
+                        debug_output('setting channels to %d' % (self.channels),
+                                     self.parent.running_sugar)
+                        '''
 
-        #    return controls[0][0]
+            return controls[0][0]
 
         return None
 
     def save_state(self):
         '''Saves the state of all audio controls'''
-        #self.master = self.get_master()
+        self.master = self.get_master()
         self.bias = self.get_bias()
         self.dc_mode = self.get_dc_mode()
         self.capture_gain = self.get_capture_gain()
         self.mic_boost = self.get_mic_boost()
-        pass
 
     def resume_state(self):
         '''Put back all audio control settings from the saved state'''
-        #self.set_master(self.master)
+        self.set_master(self.master)
         self.set_bias(self.bias)
         self.set_dc_mode(self.dc_mode)
         self.set_capture_gain(self.capture_gain)
         self.set_mic_boost(self.mic_boost)
-        pass
 
     def _get_mute(self, control, name, default):
         '''Get mute status of a control'''
@@ -363,98 +368,77 @@ class AudioGrab():
         '''Mute a control'''
         if not control:
             return
-        #self._mixer.set_mute(control, value)
+        self.pulsesrc.set_property("mute", True)
 
     def _get_volume(self, control, name):
         '''Get volume of a control and convert to a scale of 0-100'''
         if not control:
             return 100
-        #volume = self._mixer.get_volume(control)
-        #if type(volume) == tuple:
-        #    hw_volume = volume[0]
-        #else:
-        #    hw_volume = volume
-        #min_vol = control.min_volume
-        #max_vol = control.max_volume
-        #if max_vol == min_vol:
-        #    percent = 100
-        #else:
-        #    percent = (hw_volume - min_vol) * 100 // (max_vol - min_vol)
-        #return percent
-        return 100
+        percent = self.pulsesrc.get_property("volume") * 100
+        return percent
 
     def _set_volume(self, control, name, value):
         '''Sets the level of a control on a scale of 0-100'''
         if not control:
             return
         # convert value to scale of control
-        #min_vol = control.min_volume
-        #max_vol = control.max_volume
-        #if min_vol != max_vol:
-        #    hw_volume = value * (max_vol - min_vol) // 100 + min_vol
-        #    self._mixer.set_volume(control,
-        #                           (hw_volume,) * control.num_channels)
-        pass
+        self.pulsesrc.set_property("volume", value)
 
     def amixer_set(self, control, state):
         ''' Direct call to amixer for old systems. '''
-        #if state:
-        #    output = check_output(
-        #        ['amixer', 'set', "%s" % (control), 'unmute'],
-        #        'Problem with amixer set "%s" unmute' % (control),
-        #        self.parent.running_sugar)
-        #else:
-        #    output = check_output(
-        #        ['amixer', 'set', "%s" % (control), 'mute'],
-        #        'Problem with amixer set "%s" mute' % (control),
-        #        self.parent.running_sugar)
+        if state:
+            output = check_output(
+                ['amixer', 'set', "%s" % (control), 'unmute'],
+                'Problem with amixer set "%s" unmute' % (control),
+                self.parent.running_sugar)
+        else:
+            output = check_output(
+                ['amixer', 'set', "%s" % (control), 'mute'],
+                'Problem with amixer set "%s" mute' % (control),
+                self.parent.running_sugar)
 
     def mute_master(self):
         '''Mutes the Master Control'''
-        #if self._labels_available and self.parent.hw != XO1:
-        #    self._set_mute(self._master_control, 'Master', True)
-        #else:
-        #    self.amixer_set('Master', False)
-        pass
+        if self._labels_available and self.parent.hw != XO1:
+            self._set_mute(self._master_control, 'Master', True)
+        else:
+            self.amixer_set('Master', False)
 
     def unmute_master(self):
         '''Unmutes the Master Control'''
-        #if self._labels_available and self.parent.hw != XO1:
-        #    self._set_mute(self._master_control, 'Master', True)
-        #else:
-        #    self.amixer_set('Master', True)
-        pass
+        if self._labels_available and self.parent.hw != XO1:
+            self._set_mute(self._master_control, 'Master', True)
+        else:
+            self.amixer_set('Master', True)
 
     def set_master(self, master_val):
         '''Sets the Master gain slider settings
         master_val must be given as an integer between 0 and 100 indicating the
         percentage of the slider to be set'''
-        #if self._labels_available:
-        #    self._set_volume(self._master_control, 'Master', master_val)
-        #else:
-        #    output = check_output(
-        #        ['amixer', 'set', 'Master', "%d%s" % (master_val, '%')],
-        #        'Problem with amixer set Master',
-        #        self.parent.running_sugar)
-        pass
+        if self._labels_available:
+            self._set_volume(self._master_control, 'Master', master_val)
+        else:
+            output = check_output(
+                ['amixer', 'set', 'Master', "%d%s" % (master_val, '%')],
+                'Problem with amixer set Master',
+                self.parent.running_sugar)
 
     def get_master(self):
         '''Gets the MIC gain slider settings. The value returned is an
         integer between 0-100 and is an indicative of the percentage 0 - 100%'''
-        #if self._labels_available:
-        #    return self._get_volume(self._master_control, 'master')
-        #else:
-        #    output = check_output(['amixer', 'get', 'Master'],
-        #                          'amixer: Could not get Master volume',
-        #                          self.parent.running_sugar)
-        #    if output is None:
-        #        return 100
-        #    else:
-        #        output = output[find(output, 'Front Left:'):]
-        #        output = output[find(output, '[') + 1:]
-        #        output = output[:find(output, '%]')]
-        #        return int(output)
-        pass
+        if self._labels_available:
+            return self._get_volume(self._master_control, 'master')
+        else:
+            output = check_output(['amixer', 'get', 'Master'],
+                                  'amixer: Could not get Master volume',
+                                  self.parent.running_sugar)
+            if output is None:
+                return 100
+            else:
+                output = output[find(output, 'Front Left:'):]
+                output = output[find(output, '[') + 1:]
+                output = output[:find(output, '%]')]
+                return int(output)
 
     def set_bias(self, bias_state=False):
         '''Enables / disables bias voltage.'''
@@ -512,12 +496,11 @@ class AudioGrab():
     def set_dc_mode(self, dc_mode=False):
         '''Sets the DC Mode Enable control
         pass False to mute and True to unmute'''
-        #if self._labels_available and self.parent.hw != XO1:
-        #    if self._dc_control is not None:
-        #        self._set_mute(self._dc_control, 'DC mode', not dc_mode)
-        #else:
-        #    self.amixer_set('DC Mode Enable', dc_mode)
-        pass
+        if self._labels_available and self.parent.hw != XO1:
+            if self._dc_control is not None:
+                self._set_mute(self._dc_control, 'DC mode', not dc_mode)
+        else:
+            self.amixer_set('DC Mode Enable', dc_mode)
 
     def get_dc_mode(self):
         '''Returns the setting of DC Mode Enable control
@@ -699,3 +682,4 @@ def check_output(command, warning, running_sugar=True):
             debug_output(warning, running_sugar)
             return None
     return output
+
