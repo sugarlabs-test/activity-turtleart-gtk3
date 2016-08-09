@@ -2065,7 +2065,7 @@ class TurtleArtWindow():
                         clipboard.set_text(text)
                     elif self.sharing():
                         text = data_to_string(data)
-                        payload = {"payload": data_to_string([self.nick, text]})
+                        payload = {"payload": data_to_string([self.nick, text])}
                         self.send_event("B", payload)
             self.paste_offset = 20
 
