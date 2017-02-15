@@ -936,7 +936,7 @@ class LogoCode:
         if self.tw.running_sugar:
             # Is the object a dsobject?
             if isinstance(obj, Media) and obj.value:
-                from sugar.datastore import datastore
+                from sugar3.datastore import datastore
                 try:
                     dsobject = datastore.get(obj.value)
                 except:
@@ -971,9 +971,9 @@ class LogoCode:
     def save_heap(self, obj):
         """ save FILO to file """
         if self.tw.running_sugar:
-            from sugar import profile
-            from sugar.datastore import datastore
-            from sugar.activity import activity
+            from sugar3 import profile
+            from sugar3.datastore import datastore
+            from sugar3.activity import activity
 
             # Save JSON-encoded heap to temporary file
             heap_file = os.path.join(get_path(activity, 'instance'),
@@ -1134,7 +1134,7 @@ class LogoCode:
         elif user_path is not None and os.path.exists(user_path):
             self.filepath = user_path
         elif self.tw.running_sugar:  # datastore object
-            from sugar.datastore import datastore
+            from sugar3.datastore import datastore
             try:
                 self.dsobject = datastore.get(obj.value)
             except:
@@ -1264,7 +1264,7 @@ class LogoCode:
                     elif text_media_type(self.filepath):
                         mediatype = 'text'
             elif self.tw.running_sugar:
-                from sugar.datastore import datastore
+                from sugar3.datastore import datastore
                 try:
                     self.dsobject = datastore.get(obj.value)
                 except:

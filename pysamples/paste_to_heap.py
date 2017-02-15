@@ -11,10 +11,10 @@
 def myblock(tw, x):  # ignore second argument
     ''' Paste from clipboard to heap '''
 
-    from gtk import Clipboard
+    from gi.repository import Gtk
     from tautils import data_from_string
 
-    text = Clipboard().wait_for_text()
+    text = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).wait_for_text()
     if text is not None:
         for val in data_from_string(text):
             tw.lc.heap.append(val)

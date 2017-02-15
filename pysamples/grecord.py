@@ -20,8 +20,8 @@ def myblock(tw, args):
 
     from TurtleArt.tautils import get_path
     from TurtleArt.tagplay import play_audio_from_file
-    from sugar.datastore import datastore
-    from sugar import profile
+    from sugar3.datastore import datastore
+    from sugar3 import profile
 
     from gettext import gettext as _
 
