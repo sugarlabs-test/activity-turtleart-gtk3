@@ -574,7 +574,7 @@ return %s(self)" % (p, P, P)
     def _show_save_dialog(self, add_cancel=False):
         ''' Dialog for save project '''
         dlg = Gtk.MessageDialog(parent=None, type=Gtk.MessageType.INFO,
-                                buttons=ButtonsType.YES_NO,
+                                buttons=Gtk.ButtonsType.YES_NO,
                                 message_format=_('You have unsaved work. \
 Would you like to save before quitting?'))
         dlg.set_default_response(Gtk.ResponseType.YES)

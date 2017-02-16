@@ -283,7 +283,7 @@ def get_load_name(filefilter, load_save_folder=None):
     dialog = Gtk.FileChooserDialog(
         _('Load...'), None,
         Gtk.FileChooserAction.OPEN, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                     Gtk.STOCK_OPEN, Gtk.Responsetype.OK))
+                                     Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
     dialog.set_default_response(Gtk.ResponseType.OK)
     return do_dialog(dialog, filefilter, load_save_folder)
 
@@ -293,7 +293,7 @@ def get_save_name(filefilter, load_save_folder, save_file_name):
     dialog = Gtk.FileChooserDialog(
         _('Save...'), None,
         Gtk.FileChooserAction.SAVE, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                     Gtk.STOCK_SAVE, Gtk.Responsetype.OK))
+                                     Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
     dialog.set_default_response(Gtk.ResponseType.OK)
     if filefilter in ['.png', '.svg', '.lg', '.py', '.odp']:
         suffix = filefilter

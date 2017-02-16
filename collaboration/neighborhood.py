@@ -19,7 +19,7 @@
 
 from functools import partial
 
-import gconf
+from gi.repository import GConf
 import dbus
 from dbus import PROPERTIES_IFACE
 from telepathy.interfaces import (ACCOUNT,
@@ -723,7 +723,7 @@ class Neighborhood(GObject.GObject):
 
         #print('Still dont have a Salut account, creating one')
 
-        client = gconf.client_get_default()
+        client = GConf.Client.get_default()
         nick = client.get_string('/desktop/sugar/user/nick')
 
         params = {

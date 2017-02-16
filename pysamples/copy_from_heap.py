@@ -10,7 +10,7 @@
 def myblock(tw, x):  # second argument is ignored
     ''' Copy heap to clipboard '''
 
-    from gtk import Clipboard
+    from gi.repository import Gtk
     from TurtleArt.tautils import data_to_string
 
-    Clipboard().set_text(data_to_string(tw.lc.heap))
+    Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(data_to_string(tw.lc.heap))
