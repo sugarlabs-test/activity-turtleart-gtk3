@@ -1,6 +1,8 @@
 TurtleBlocks
 ============
 
+# :white_check_mark: :white_check_mark: :white_check_mark: Builds Perfectly
+
 Turtle Art, also known as Turtle Blocks, is an activity with a
 Logo-inspired graphical "turtle" that draws colorful art based on
 snap-together visual programming elements. Its "low floor" provides an
