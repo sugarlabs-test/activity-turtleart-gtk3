@@ -1,6 +1,6 @@
 [Activity]
 name = TurtleBlocks
-activity_version = 213
+activity_version = 214
 license = MIT
 bundle_id = org.laptop.TurtleArtActivity
 exec = sugar-activity TurtleArtActivity.TurtleArtActivity
